@@ -1,0 +1,9 @@
+---
+# Self signed certificates
+self_signed_ssl_certs:
+  - common_name: "{{ ansible_fqdn }}"
+    crt_path: "/etc/ssl/certs/{{ ansible_fqdn }}.crt"
+    key_path: "/etc/ssl/private/{{ ansible_fqdn }}.key"
+
+# Renew the self signed certificate
+renew_self_signed_certs: False

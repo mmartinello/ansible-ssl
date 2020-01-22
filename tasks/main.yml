@@ -1,0 +1,36 @@
+---
+- name: Check if certificate exists
+  stat:
+    path: "{{ item.crt_path }}"
+  loop: "{{ self_signed_ssl_certs }}"
+  register: self_signed_ssl_cert_file
+
+- name: Generate the private key
+  openssl_privatekey:
+    path: "{{ item.key_path }}"
+  loop: "{{ self_signed_ssl_certs }}"
+  loop_control:
+    index_var: index
+  when: self_signed_ssl_cert_file.results[index].stat.exists == False or renew_self_signed_certs == True
+
+- name: Generate a CSR
+  openssl_csr:
+    path: "{{ item.key_path }}.csr"
+    privatekey_path: "{{ item.key_path }}"
+    common_name: "{{ item.common_name }}"
+  loop: "{{ self_signed_ssl_certs }}"
+  loop_control:
+    index_var: index
+  when: self_signed_ssl_cert_file.results[index].stat.exists == False or renew_self_signed_certs == True
+
+- name: Generate a self Signed certificate
+  openssl_certificate:
+    path: "{{ item.crt_path }}"
+    privatekey_path: "{{ item.key_path }}"
+    csr_path: "{{ item.key_path }}.csr"
+    provider: selfsigned
+  loop: "{{ self_signed_ssl_certs }}"
+  loop_control:
+    index_var: index
+  when: self_signed_ssl_cert_file.results[index].stat.exists == False or renew_self_signed_certs == True
+
